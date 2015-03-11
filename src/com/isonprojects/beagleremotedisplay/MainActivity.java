@@ -21,9 +21,12 @@ import android.media.AudioTrack;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -87,6 +90,7 @@ public class MainActivity extends Activity {
                                 mOutputStream = new FileOutputStream(fd);
                                 
                                 audioThread.start();
+                                mouseThread.start();
                 				
                 				new Thread(){
                 					public void run(){
@@ -282,7 +286,86 @@ public class MainActivity extends Activity {
             	
             }
         });
+        
+        imageView.setOnTouchListener(new OnTouchListener() {			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				int eid = event.getAction();
+				switch (eid){
+					case MotionEvent.ACTION_DOWN:
+						downx = event.getX();
+						downy = event.getY();
+						break;
+						
+					case MotionEvent.ACTION_MOVE:
+					case MotionEvent.ACTION_UP:
+						upx = event.getX();
+						upy = event.getY();
+						
+						//Toast.makeText(getApplicationContext(), "x=" + upx + "y=" + upy, Toast.LENGTH_SHORT).show();
+						
+						int x = (int)Math.ceil((double)(upx - downx));
+						int y = (int)Math.ceil((double)(upy - downy));
+						
+						if (Math.abs(x) > 0) downx = upx;
+						if (Math.abs(y) > 0) downy = upy;
+						
+						if ((Math.abs(x) > 0 || Math.abs(y) > 0) && mousePoints.size() < 1000);
+						{
+							try{
+								mousePoints.add(new Point(x, y));
+							}
+							catch(Exception ex){
+								
+							}
+						}
+							
+						break;
+					
+					default:
+						break;
+				}	
+					
+				return true;
+			}
+		});
 	}
+	
+	@Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+    	
+    	Toast.makeText(getApplicationContext(), "" + (char)event.getUnicodeChar(), Toast.LENGTH_SHORT).show();
+    	
+    	if (event.getUnicodeChar() >= 'A' && event.getUnicodeChar() <= 'Z'){
+    		sendKeyboardData(event.getUnicodeChar() - 'A' + 4);
+    	}
+    	else if(event.getUnicodeChar() >= 'a' && event.getUnicodeChar() <= 'z'){
+    		sendKeyboardData(event.getUnicodeChar() - 'a' + 4);
+    	}
+    	else if(event.getUnicodeChar() >= '1' && event.getUnicodeChar() <= '9'){
+    		sendKeyboardData(event.getUnicodeChar() - '0' + 30);
+    	}
+    	else if(event.getUnicodeChar() == '0'){
+    		sendKeyboardData(event.getUnicodeChar() - '0' + 39);
+    	}
+    	else{
+    		for (int i=0;i<KEYCODES.length; i++){
+    			if (KEYCODES[i] == event.getUnicodeChar()){
+    				sendKeyboardData(i);
+    				break;
+    			}
+    		}
+    	}
+    	//sendKeyboardData();
+    	
+    	return super.onKeyUp(keyCode, event);
+    }
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+    	// TODO Auto-generated method stub
+    	return super.onKeyDown(keyCode, event);
+    }
 	
 	private void sendMouseData(byte data[]){
     	byte buffer[] = {0,0,0,0,0,0,0,0};
