@@ -38,7 +38,13 @@ public class MainActivity extends Activity {
 	private static final String ACTION_USB_PERMISSION =
     	    "com.android.example.USB_PERMISSION";
 	
-	private static int AUDIO_BUFFER_SIZE = 4096*4;
+	
+	private static int DATA_SIZE = 4096;
+	private static int AUDIO_BUFFER_SIZE = 4096 * 4;
+	private static int DATA_HEADER_SIZE = 4;
+	private static int DATA_PACKET_SIZE = 5000;
+	private static int DATA_AUDIO = 1;
+	private static int DATA_VIDEO = 2;
 	
 	private final char KEYCODES[] = {
 			0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -49,6 +55,7 @@ public class MainActivity extends Activity {
 	
 	public static SynchronousQueue<Point> mousePoints = new SynchronousQueue<Point>();
 	public static SynchronousQueue<byte[]> audioData = new SynchronousQueue<byte[]>();
+	public static SynchronousQueue<byte[]> videoData = new SynchronousQueue<byte[]>();
 	
 	private Thread mouseThread;
 	private Thread audioThread;
@@ -94,13 +101,24 @@ public class MainActivity extends Activity {
                 				
                 				new Thread(){
                 					public void run(){
-                						byte buffer[] = new byte[4096];
+                						byte buffer[] = new byte[DATA_PACKET_SIZE];
                 						int count = 1;
                 						while(!stopRequested){
                 							try {
-                								mInputStream.read(buffer, 0, 4096);
+                								mInputStream.read(buffer, 0, DATA_PACKET_SIZE);
                 	        					System.out.println("Adding: " + count);
-                								audioData.put(buffer);
+                	        					
+                	        					byte[] data = new byte[DATA_SIZE];
+                	        					System.arraycopy(buffer, DATA_HEADER_SIZE, data, 0, DATA_SIZE);
+                	        					
+                	        					
+                	        					if ((int)buffer[0] == DATA_AUDIO){
+                	        						audioData.put(data);
+                	        					}
+                	        					else if ((int)buffer[0] == DATA_VIDEO){
+                	        						videoData.put(buffer);
+                	        					}
+                	        					
                 								System.out.println("Add: " + count);
                 								//fileOutputStream.write(buffer);
                 								count++;
