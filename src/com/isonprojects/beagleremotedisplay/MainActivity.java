@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
 	private static int DATA_SIZE = 4096;
 	private static int AUDIO_BUFFER_SIZE = 4096 * 4;
 	private static int DATA_HEADER_SIZE = 4;
-	private static int DATA_PACKET_SIZE = 5000;
+	private static int DATA_PACKET_SIZE = 4100;
 	private static int DATA_AUDIO = 1;
 	private static int DATA_VIDEO = 2;
 	
